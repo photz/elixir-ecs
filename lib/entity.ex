@@ -23,10 +23,10 @@ defmodule Entity do
   @doc """
   Creates a new entity without any components
   """
-  def new(components \\ []) do
+  def new(entity_id, components \\ []) do
     components_map = components_to_map(components)
 
-    %Entity{id: 123, components: components_map}
+    %Entity{id: entity_id, components: components_map}
   end
 
   @doc """

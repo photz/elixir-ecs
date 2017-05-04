@@ -78,10 +78,16 @@ class SimpleTest(unittest.TestCase):
 
         self._server_proc.kill()
 
-    def testCreateBlock(self):
-        self._sendJson({"status": "ok"})
+    def testInitial(self):
+        self._sendJson({"type": "forward"})
+
+        #logging.info('received: {}'.format(resp))
+
+        time.sleep(5)
+
+        self._sendJson({"type": "backward"})
+
         resp = self._recvJson()
-        logging.info('received: {}'.format(resp))
 
 def main():
     unittest.main()

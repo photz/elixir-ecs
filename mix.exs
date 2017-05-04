@@ -32,6 +32,7 @@ defmodule ElixirEcs.Mixfile do
     [
       {:socket, "~> 0.3"},
       {:poison, "~> 3.0"},
+      {:graphmath, "~> 1.0.2"},
     ]
   end
 end

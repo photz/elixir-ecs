@@ -24,31 +24,44 @@ defmodule ElixirEcs do
         Logger.debug "unable to run server"
     end
 
-    ElixirEcs.loop([])
+    ElixirEcs.loop(0, %{})
 
     Supervisor.start_link [], strategy: :one_for_one
 
   end
 
-  def loop(entities) do
-    Logger.info "got #{length(entities)} entities"
+  def loop(entity_count, entities) do
+    Logger.info "got #{length(Map.keys(entities))} entities"
 
-    receive do
+    {entity_count, entities} =
+      receive do
       {:new_client, new_client_sock} ->
         Logger.info "got a new client"
 
         Socket.Web.accept! new_client_sock
 
-        {:ok, client_pid} = Websock.Client.start_link(self(),
-          new_client_sock)
+        entity_id = entity_count
 
-        entity = Entity.new
-        
+        {:ok, client_pid} = Websock.Client.start_link(
+          self(), new_client_sock, entity_id)
 
-        entities = [1 | entities]
+        entity = Component.create_player_entity(entity_id)
+
+        {entity_count + 1, Map.put(entities, entity_id, entity)}
+
+    after 3_000 ->
+        {entity_count, entities}
     end
 
-    loop(entities)
+    entities = Systems.Networked.run(entities)
+
+    entities = Systems.IntentToAction.run(entities)
+
+    entities = Systems.Movement.run(entities)
+
+    IO.inspect entities
+
+    loop(entity_count, entities)
   end
 
   defp get_port(default_port) do
