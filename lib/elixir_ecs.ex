@@ -53,11 +53,10 @@ defmodule ElixirEcs do
         {entity_count, entities}
     end
 
-    entities = Systems.Networked.run(entities)
-
-    entities = Systems.IntentToAction.run(entities)
-
-    entities = Systems.Movement.run(entities)
+    entities = entities
+    |> Systems.Networked.run
+    |> Systems.IntentToAction.run
+    |> Systems.Movement.run
 
     IO.inspect entities
 
