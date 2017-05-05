@@ -6,26 +6,42 @@ defmodule Component do
   def create_player_entity(entity_id) do
     import Entity, only: [add_component: 2]
     Entity.new(entity_id)
-    |> add_component(Component.Displacement.new(0, 0, 0))
-    |> add_component(Component.Velocity.new(0, 0, 0))
+    |> add_component(Component.Displacement.new)
+    |> add_component(Component.Velocity.new)
     |> add_component(Component.Controllable.new)
   end
 
+  defmodule Orientation do
+    def new(angle) do
+      
+    end
+  end
+
   defmodule Displacement do
-    def new(x, y, z) do
-      %{:name => :displacement, :x => x, :y => y, :z => z}
+    def new do
+      displacement = Graphmath.Vec3.create()
+      %{:name => :displacement, :displacement => displacement}
+    end
+    def set(displacement, vec) do
+      %{ displacement | :displacement => vec }
     end
   end
 
   defmodule Velocity do
-    def new(x, y, z) do
-      %{:name => :velocity, :x => x, :y => y, :z => z}
+    def new do
+      velocity = Graphmath.Vec3.create()
+      %{:name => :velocity, :velocity => velocity}
     end
     def move_forward(velocity) do
-      %{ velocity | :x => 1 }
+      {x, y, z} = velocity
+      {1, y, z}
     end
     def stop_moving_forward(velocity) do
-      %{ velocity | :x => 0 }
+      {x, y, z} = velocity
+      {0, y, z}
+    end
+    def set(velocity, vec) do
+      %{ velocity | :velocity => vec }
     end
   end
 

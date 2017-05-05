@@ -16,14 +16,16 @@ defmodule Systems do
         is_nil(velocity) or is_nil(displacement) ->
           entities_map
 
-
         true ->
 
-          displacement = %{ displacement |
-                            :x => displacement.x + velocity.x,
-                            :y => displacement.y + velocity.y,
-                            :z => displacement.z + velocity.z }
-                            
+          displacement_vec = displacement.displacement
+
+          velocity_vec = velocity.velocity
+
+          displacement_vec = Graphmath.Vec3.add(displacement_vec, velocity_vec)
+
+          displacement = displacement |> Component.Displacement.set(displacement_vec)
+
           entity = entity |> Entity.update_component(displacement)
 
           %{ entities_map | entity_id => entity }
@@ -34,11 +36,8 @@ defmodule Systems do
 
   defmodule IntentToAction do
     def run(entities_map) do
-
       Enum.reduce(
         entities_map, entities_map, &Systems.IntentToAction.update/2)
-
-
     end
 
     def update({entity_id, entity}, entities_map) do
@@ -60,14 +59,14 @@ defmodule Systems do
               nil -> 0
             end
 
-          y =
+          z =
             case controllable.lateral_movement do
               :left -> speed
               :right -> -speed
               nil -> 0
             end
 
-          velocity = %{ velocity | :x => x, :y => y }
+          velocity = Component.Velocity.set(velocity, {x, 0, z})
 
           entity = entity |> Entity.update_component(velocity)
 
