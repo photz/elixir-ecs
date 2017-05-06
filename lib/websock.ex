@@ -24,7 +24,7 @@ defmodule Websock do
   end
 
   defmodule ClientMessage do
-    defstruct [:type]
+    defstruct [:type, :angle]
   end
 
   defmodule Client do
@@ -45,22 +45,26 @@ defmodule Websock do
 
           case client_msg.type do
             "forward" ->
-              send pid, {:command, :forward, entity_id, self()}
+              send pid, {:command, :forward, nil, entity_id, self()}
 
             "backward" ->
-              send pid, {:command, :backward, entity_id, self()}
+              send pid, {:command, :backward, nil, entity_id, self()}
 
             "left" ->
-              send pid, {:command, :left, entity_id, self()}
+              send pid, {:command, :left, nil, entity_id, self()}
 
             "right" ->
-              send pid, {:command, :right, entity_id, self()}
+              send pid, {:command, :right, nil, entity_id, self()}
 
             "stop_frontal" ->
-              send pid, {:command, :stop_frontal, entity_id, self()}
+              send pid, {:command, :stop_frontal, nil, entity_id, self()}
 
             "stop_lateral" ->
-              send pid, {:command, :stop_lateral, entity_id, self()}
+              send pid, {:command, :stop_lateral, nil, entity_id, self()}
+
+            "turn" ->
+              
+              send pid, {:command, :turn, client_msg.angle, entity_id, self()}
           end
 
         {:status_info, response} ->

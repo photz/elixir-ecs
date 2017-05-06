@@ -10,10 +10,11 @@ defmodule Systems do
 
       velocity = entity |> Entity.get_component(:velocity)
       displacement = entity |> Entity.get_component(:displacement)
+      orientation = entity |> Entity.get_component(:orientation)
 
       cond do
 
-        is_nil(velocity) or is_nil(displacement) ->
+        is_nil(velocity) or is_nil(displacement) or is_nil(orientation) ->
           entities_map
 
         true ->
@@ -22,11 +23,25 @@ defmodule Systems do
 
           velocity_vec = velocity.velocity
 
-          displacement_vec = Graphmath.Vec3.add(displacement_vec, velocity_vec)
+          angle = orientation.angle
+
+          {x, y, z} = velocity_vec
+          velocity_vec = {x, y, z, 1}
+
+          rot = Graphmath.Mat44.make_rotate_y(angle)
+
+          go_vec = Graphmath.Mat44.apply(rot, velocity_vec)
+
+          {xd, yd, zd, _} = go_vec
+
+          {x, y, z} = displacement_vec
+
+          displacement_vec = {x + xd, y + yd, z + zd}
 
           displacement = displacement |> Component.Displacement.set(displacement_vec)
 
-          entity = entity |> Entity.update_component(displacement)
+          entity = entity
+          |> Entity.update_component(displacement)
 
           %{ entities_map | entity_id => entity }
       end
@@ -52,14 +67,14 @@ defmodule Systems do
           controllable = entity |> Entity.get_component(:controllable)
           velocity = entity |> Entity.get_component(:velocity)
 
-          x = 
+          z = 
             case controllable.frontal_movement do
               :forward -> speed
               :backward -> -speed
               nil -> 0
             end
 
-          z =
+          x =
             case controllable.lateral_movement do
               :left -> speed
               :right -> -speed
@@ -69,6 +84,12 @@ defmodule Systems do
           velocity = Component.Velocity.set(velocity, {x, 0, z})
 
           entity = entity |> Entity.update_component(velocity)
+
+          orientation = entity |> Entity.get_component(:orientation)
+
+          orientation = orientation |> Component.Orientation.set_angle(controllable.angle)
+
+          entity = entity |> Entity.update_component(orientation)
 
           %{ entities_map | entity_id => entity }
       end
@@ -81,7 +102,7 @@ defmodule Systems do
     def run(entities) do
       receive do
 
-        {:command, command, entity_id, _} ->
+        {:command, command, data, entity_id, _} ->
 
           entity = Map.fetch!(entities, entity_id)
 
@@ -106,6 +127,10 @@ defmodule Systems do
 
               :stop_lateral ->
                 compo |> Component.Controllable.stop_moving_laterally
+
+              :turn ->
+                angle = data
+                compo |> Component.Controllable.set_angle(angle)
             end
 
           entity = entity |> Entity.update_component(component)

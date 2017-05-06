@@ -9,11 +9,15 @@ defmodule Component do
     |> add_component(Component.Displacement.new)
     |> add_component(Component.Velocity.new)
     |> add_component(Component.Controllable.new)
+    |> add_component(Component.Orientation.new)
   end
 
   defmodule Orientation do
-    def new(angle) do
-      
+    def new do
+      %{:name => :orientation, :angle => 0}
+    end
+    def set_angle(component, angle) do
+      %{ component | :angle => angle }
     end
   end
 
@@ -33,12 +37,12 @@ defmodule Component do
       %{:name => :velocity, :velocity => velocity}
     end
     def move_forward(velocity) do
-      {x, y, z} = velocity
-      {1, y, z}
+      {x, y, z} = velocity.velocity
+      %{ velocity | :velocity => {x, y, 1} }
     end
     def stop_moving_forward(velocity) do
       {x, y, z} = velocity
-      {0, y, z}
+      %{ velocity | :velocity => {x, y, 0} }
     end
     def set(velocity, vec) do
       %{ velocity | :velocity => vec }
@@ -50,7 +54,8 @@ defmodule Component do
       %{
         name: :controllable,
         frontal_movement: nil,
-        lateral_movement: nil
+        lateral_movement: nil,
+        angle: 0.0
       }
     end
     def moving_forward?(component) do
@@ -82,6 +87,9 @@ defmodule Component do
     end
     def stop_moving_laterally(component) do
       Map.put(component, :lateral_movement, nil)
+    end
+    def set_angle(component, angle) do
+      Map.put(component, :angle, angle)
     end
   end
 end

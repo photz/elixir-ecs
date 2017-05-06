@@ -79,13 +79,11 @@ class SimpleTest(unittest.TestCase):
         self._server_proc.kill()
 
     def testInitial(self):
+        from math import pi
+
+        self._sendJson({"type": "turn", "angle": pi / 4})
+
         self._sendJson({"type": "forward"})
-
-        #logging.info('received: {}'.format(resp))
-
-        time.sleep(5)
-
-        self._sendJson({"type": "backward"})
 
         resp = self._recvJson()
 
