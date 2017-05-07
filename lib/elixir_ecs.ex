@@ -30,10 +30,10 @@ defmodule ElixirEcs do
 
   end
 
-  def loop(entity_count, entities, prev_time \\ nil) do
-    Logger.info "got #{length(Map.keys(entities))} entities"
+  def loop(entity_count, entities, clients \\ [], prev_time \\ nil) do
+    #Logger.info "got #{length(Map.keys(entities))} entities"
 
-    {entity_count, entities} =
+    {entity_count, entities, clients} =
       receive do
       {:new_client, new_client_sock} ->
         Logger.info "got a new client"
@@ -47,10 +47,14 @@ defmodule ElixirEcs do
 
         entity = Component.create_player_entity(entity_id)
 
-        {entity_count + 1, Map.put(entities, entity_id, entity)}
+        {
+          entity_count + 1,
+          Map.put(entities, entity_id, entity),
+          [client_pid | clients]
+        }
 
-    after 3_000 ->
-        {entity_count, entities}
+    after 1_000 ->
+        {entity_count, entities, clients}
     end
 
     prev_time = if is_integer(prev_time),
@@ -66,9 +70,16 @@ defmodule ElixirEcs do
     |> Systems.IntentToAction.run(time_elapsed)
     |> Systems.Movement.run(time_elapsed)
 
-    IO.inspect entities
+    broadcast_state(clients, entities)
 
-    loop(entity_count, entities, time)
+    loop(entity_count, entities, clients, time)
+  end
+
+  def broadcast_state([client|clients], entities) do
+    send client, {:state_update, entities}
+    broadcast_state(clients, entities)
+  end
+  def broadcast_state([], entities) do
   end
 
   defp get_port(default_port) do

@@ -71,6 +71,16 @@ defmodule Websock do
           {:ok, status_as_json} = Poison.encode(response)
           Socket.Web.send! client, {:text, status_as_json}
 
+        {:state_update, entities} ->
+          entity = entities |> Map.get(entity_id)
+          displacement = entity |> Entity.get_component(:displacement)
+          orientation = entity |> Entity.get_component(:orientation)
+          {x, y, z} = displacement.displacement
+          {:ok, client_msg} = Poison.encode(%{:angle => orientation.angle,
+                                      :x => x,
+                                      :z => z})
+
+          Socket.Web.send! client, {:text, client_msg}
       end
 
       loop(pid, client, entity_id)
