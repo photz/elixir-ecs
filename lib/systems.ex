@@ -3,10 +3,16 @@ defmodule Systems do
   Provices systems for an Entity Component System
   """
   defmodule Movement do
-    def run(entities_map) do
-      Enum.reduce(entities_map, entities_map, &update/2)
+    def run(entities_map, time_elapsed) do
+      Enum.reduce(entities_map, entities_map,
+        fn {entity_id, entity}, entities_map ->
+
+          update({entity_id, entity}, entities_map, time_elapsed)
+
+        end)
+
     end
-    def update({entity_id, entity}, entities_map) do
+    def update({entity_id, entity}, entities_map, time_elapsed) do
 
       velocity = entity |> Entity.get_component(:velocity)
       displacement = entity |> Entity.get_component(:displacement)
@@ -32,11 +38,17 @@ defmodule Systems do
 
           go_vec = Graphmath.Mat44.apply(rot, velocity_vec)
 
+          delta_t_sec = time_elapsed / 1000000.0
+
           {xd, yd, zd, _} = go_vec
 
           {x, y, z} = displacement_vec
 
-          displacement_vec = {x + xd, y + yd, z + zd}
+          displacement_vec = {
+            x + delta_t_sec * xd,
+            y + delta_t_sec * yd,
+            z + delta_t_sec * zd
+          }
 
           displacement = displacement |> Component.Displacement.set(displacement_vec)
 
@@ -50,7 +62,7 @@ defmodule Systems do
 
 
   defmodule IntentToAction do
-    def run(entities_map) do
+    def run(entities_map, time_elapsed) do
       Enum.reduce(
         entities_map, entities_map, &Systems.IntentToAction.update/2)
     end
@@ -99,7 +111,7 @@ defmodule Systems do
 
   defmodule Networked do
 
-    def run(entities) do
+    def run(entities, time_elapsed) do
       receive do
 
         {:command, command, data, entity_id, _} ->

@@ -30,7 +30,7 @@ defmodule ElixirEcs do
 
   end
 
-  def loop(entity_count, entities) do
+  def loop(entity_count, entities, prev_time \\ nil) do
     Logger.info "got #{length(Map.keys(entities))} entities"
 
     {entity_count, entities} =
@@ -53,14 +53,22 @@ defmodule ElixirEcs do
         {entity_count, entities}
     end
 
+    prev_time = if is_integer(prev_time),
+      do: prev_time,
+      else: System.system_time(:microsecond)
+
+    time = System.system_time(:microsecond)
+             
+    time_elapsed = time - prev_time
+
     entities = entities
-    |> Systems.Networked.run
-    |> Systems.IntentToAction.run
-    |> Systems.Movement.run
+    |> Systems.Networked.run(time_elapsed)
+    |> Systems.IntentToAction.run(time_elapsed)
+    |> Systems.Movement.run(time_elapsed)
 
     IO.inspect entities
 
-    loop(entity_count, entities)
+    loop(entity_count, entities, time)
   end
 
   defp get_port(default_port) do
