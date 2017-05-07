@@ -31,7 +31,12 @@ defmodule Component do
     end
   end
 
+
   defmodule Velocity do
+    @moduledoc """
+    A Component that represents an entity's velocity in object coordinates
+    """
+
     def new do
       velocity = Graphmath.Vec3.create()
       %{:name => :velocity, :velocity => velocity}
